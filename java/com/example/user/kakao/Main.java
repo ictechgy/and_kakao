@@ -22,21 +22,21 @@ public class Main extends AppCompatActivity {
         findViewById(R.id.moveLogin).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*
-                Intent intent = new Intent(ctx, Login.class);  //아까 manifest에서 메인을 띄우려 한것도 intent filter였다.
-                //생성자에 인자로 '어디에서 출발해서 어디로 가는 것인지'를 입력해주도록 한다. (from to 형식)
-                //이 Main페이지 ctx에서 Login이라는 곳으로 이동시킨다. 이 때 Login 파일은 이미 컴파일되어있어서 class파일이다.
-                그 클래스파일로 이동되록 의도시킬 것이다.
 
-                startActivity(intent);  //출발지와 목적지를 지정한 후 해당 정보를 가지고 본격적으로 이동해라 라고 실행시키는 것.
+                //이 버튼을 눌렀을 때 데이터베이스가 먼저 만들어지도록 하자.
+                SqliteHelper helper = new SqliteHelper(ctx);
+                //생성자가 작동하면서 데이터베이스 파일이 만들어지고, 테이블이 존재하지 않았으니 onCreate()또한 자동으로 실행시킨다.
+                //helper라는 객체를 만드는 것은 곧 SQLite DB를 만드는 것이다.
 
-                */
+                //onCreate 라는 것은 말 그대로 객체가 만들어지고 호출당하면 실행시키는 메소드이다.
+                //Main이든 SqliteHelper든
 
-                startActivity(new Intent(ctx, Login.class));    //한줄로 줄이기
+                startActivity(new Intent(ctx, Login.class));
 
             }
         });
     }   //onCreate End
+
 
     static interface ExecuteService{
         public void perform();    //보통 perform이라는 이름으로 많이 쓴다.
@@ -48,11 +48,10 @@ public class Main extends AppCompatActivity {
         public Object perform();
     }
 
-    //인터페이스를 파일로 따로 만들지 않고 여기에다가 바로 만들었다.(편리)
-    //static으로 만든 이유는.. 재사용성등을 높이기 위해서?
 
-    static abstract class QueryFactory{  //쿼리를 반드시 작성해서 이 객체를 만들도록? - 추상팩토리 패턴
-        Context ctx;                        //이 클래스에 대한 객체를 만들때 무언가를 강제시킴(오버라이딩 등)
+
+    static abstract class QueryFactory{
+        Context ctx;
 
         public QueryFactory(Context ctx) {
             this.ctx = ctx;
@@ -61,32 +60,35 @@ public class Main extends AppCompatActivity {
         public abstract SQLiteDatabase getDatabase();
     }
 
+
     static class SqliteHelper extends SQLiteOpenHelper{
 
-        public SqliteHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
+        public SqliteHelper(Context context) {
             super(context, DBInfo.DBNAME, null, 1);
-            // super(context, name, factory, version);
-            //factory는 우리가 만든 것을 쓰겠다는 의미의 null
 
-            this.getWritableDatabase();  //사용자의 정보등을 데이터베이스에 입력할 것이다.
+            this.getWritableDatabase();  //요건 없어도 될 것 같은데?
+            //SQLiteDatabase객체를 생성하는 메소드로서.. 데이터베이스 파일 생성 또는 오픈이 성공했다면
+            //해당 데이터베이스에 대한 참조객체를 반환받을 수 있다. (테이블 자체에 대한 직접적인 참조객체가 아님에 유의)
+            //또한 이것은 읽기 및 쓰기가 다 가능한 객체를 반환받을 수 있다. getReadableDatabase()는 읽기전용
+
+            //선생님께 물어보니, 이후에 바로 진행하는 INSERT 때문에 저 구문을 넣었다고 하셨다.
+            //정말이다. 저 구문을 주석처리 했더니 테이블조차 생성이 되지 않는다.
+            //onCreate()메소드에서 필요로 하는 SQLiteDatabase db 매개변수를 채워주기 위해 존재하는 것으로 보인다.
         }
 
-
-        //Implements 한 메소드들
-        //아예 추상으로 형태만 잡혀있는건 Implements라고 하고 조금이라도 내용있는걸 바꾸는걸 오버라이딩이라고 하는건가
         @Override
         public void onCreate(SQLiteDatabase db) {
             String sql = String.format(
-                    " CREATE TABLE IF NOT EXIST %s " +
+                    " CREATE TABLE IF NOT EXISTS %s " +
                             " ( %s INTEGER PRIMARY KEY AUTOINCREMENT," +
                             "   %s TEXT," +
                             "   %s TEXT," +
                             "   %s TEXT," +
                             "   %s TEXT," +
                             "   %s TEXT," +
-                            "   %s TEXT," +
-                            ")"
-                    ,DBInfo.MBR_TABLE,
+                            "   %s TEXT" +
+                            ")",
+                    DBInfo.MBR_TABLE,
                     DBInfo.MBR_SEQ,
                     DBInfo.MBR_NAME,
                     DBInfo.MBR_EMAIL,
@@ -94,7 +96,7 @@ public class Main extends AppCompatActivity {
                     DBInfo.MBR_ADDR,
                     DBInfo.MBR_PHONE,
                     DBInfo.MBR_PHOTO
-            );   //s는 string을 의미. 앞뒤 한칸씩 띄운 것은 쿼리문이 붙는 것 방지
+            );
             Log.d("실행할 쿼리 :", sql);
             db.execSQL(sql);
             Log.d("================================= :", "쿼리 실행");
@@ -122,8 +124,6 @@ public class Main extends AppCompatActivity {
                         DBInfo.MBR_TABLE, DBInfo.MBR_NAME, DBInfo.MBR_EMAIL, DBInfo.MBR_PASS,
                         DBInfo.MBR_ADDR, DBInfo.MBR_PHONE, DBInfo.MBR_PHOTO,
                         names[i], emails[i], '1', addrs[i], "010-1234-567"+i, "PHOTO_"+(i+1)
-
-
                 ));
             }
             Log.d("***************","친구등록완료");
@@ -131,7 +131,10 @@ public class Main extends AppCompatActivity {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+            db.execSQL(" DROP TABLE IF EXISTS " + DBInfo.MBR_TABLE);
+            onCreate(db);
+            //데이터베이스 테이블을 업그레이드 할 때 사용되는 메소드
+            //어플을 삭제했다가 다시 설치시켰을 때에도 작동이 되나
         }
     }
 

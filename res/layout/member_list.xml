@@ -4,19 +4,17 @@
     android:orientation="vertical"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <LinearLayout
+    <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp">
-        <TextView
-            android:id="@+id/fr1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="친구1"
-            android:textSize="30dp"
-            />
+        android:id="@+id/btnAdd"
+        android:text="친구추가"
+        />
 
+    <ListView
+        android:id="@+id/mbrList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></ListView>
 
-    </LinearLayout>
 
 </LinearLayout>
