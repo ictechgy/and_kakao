@@ -23,13 +23,7 @@ public class Main extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                //이 버튼을 눌렀을 때 데이터베이스가 먼저 만들어지도록 하자.
                 SqliteHelper helper = new SqliteHelper(ctx);
-                //생성자가 작동하면서 데이터베이스 파일이 만들어지고, 테이블이 존재하지 않았으니 onCreate()또한 자동으로 실행시킨다.
-                //helper라는 객체를 만드는 것은 곧 SQLite DB를 만드는 것이다.
-
-                //onCreate 라는 것은 말 그대로 객체가 만들어지고 호출당하면 실행시키는 메소드이다.
-                //Main이든 SqliteHelper든
 
                 startActivity(new Intent(ctx, Login.class));
 
@@ -39,7 +33,7 @@ public class Main extends AppCompatActivity {
 
 
     static interface ExecuteService{
-        public void perform();    //보통 perform이라는 이름으로 많이 쓴다.
+        public void perform();
     }
     static interface ListService{
         public List<?> perform();
@@ -66,14 +60,7 @@ public class Main extends AppCompatActivity {
         public SqliteHelper(Context context) {
             super(context, DBInfo.DBNAME, null, 1);
 
-            this.getWritableDatabase();  //요건 없어도 될 것 같은데?
-            //SQLiteDatabase객체를 생성하는 메소드로서.. 데이터베이스 파일 생성 또는 오픈이 성공했다면
-            //해당 데이터베이스에 대한 참조객체를 반환받을 수 있다. (테이블 자체에 대한 직접적인 참조객체가 아님에 유의)
-            //또한 이것은 읽기 및 쓰기가 다 가능한 객체를 반환받을 수 있다. getReadableDatabase()는 읽기전용
-
-            //선생님께 물어보니, 이후에 바로 진행하는 INSERT 때문에 저 구문을 넣었다고 하셨다.
-            //정말이다. 저 구문을 주석처리 했더니 테이블조차 생성이 되지 않는다.
-            //onCreate()메소드에서 필요로 하는 SQLiteDatabase db 매개변수를 채워주기 위해 존재하는 것으로 보인다.
+            this.getWritableDatabase();
         }
 
         @Override
@@ -133,8 +120,6 @@ public class Main extends AppCompatActivity {
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             db.execSQL(" DROP TABLE IF EXISTS " + DBInfo.MBR_TABLE);
             onCreate(db);
-            //데이터베이스 테이블을 업그레이드 할 때 사용되는 메소드
-            //어플을 삭제했다가 다시 설치시켰을 때에도 작동이 되나
         }
     }
 

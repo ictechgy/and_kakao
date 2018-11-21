@@ -60,4 +60,11 @@ public class Member {   //
     public void setPhoto(String photo) {
         this.photo = photo;
     }
+
+
+    @Override
+    public String toString() {
+        return getName()+getAddr()+getEmail()+getPass()+getPhone()+getPhoto()+getSeq();
+    }
+    //member객체에 대해서 toString()했을 경우를 위한 오버라이딩
 }

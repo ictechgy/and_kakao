@@ -2,6 +2,8 @@ package com.example.user.kakao;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -29,4 +31,36 @@ public class MemberDetail extends AppCompatActivity {
         });
 
     }
+
+    private class DetailQuery extends Main.QueryFactory{
+        SQLiteOpenHelper helper;
+        public DetailQuery(Context ctx) {
+            super(ctx);
+            helper = new Main.SqliteHelper(ctx);
+        }
+
+        @Override
+        public SQLiteDatabase getDatabase() {
+            return helper.getReadableDatabase();
+        }
+    }
+
+    private class ItemDetail extends DetailQuery{
+        public ItemDetail(Context ctx) {
+            super(ctx);
+        }
+
+        public Object execute(){
+            return super.
+                    getDatabase().
+                    rawQuery(String.format(
+                       " SELECT * FROM %s WHERE %s LIKE %s",
+                       DBInfo.MBR_TABLE
+                    ),null);
+        }
+
+    }
+
+
+
 }
