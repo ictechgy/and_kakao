@@ -64,7 +64,8 @@ public class Member {   //
 
     @Override
     public String toString() {
-        return getName()+getAddr()+getEmail()+getPass()+getPhone()+getPhoto()+getSeq();
+        return "id값 : "+getSeq()+" 이름 : " + getName()+" 주소 : "+getAddr()+" 이메일 : "+getEmail()+
+                " 패스워드 : "+getPass()+" 휴대폰번호 : "+getPhone()+" 사진이름 : "+getPhoto();
     }
     //member객체에 대해서 toString()했을 경우를 위한 오버라이딩
 }

@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -18,7 +19,6 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class MemberList extends AppCompatActivity {
 
@@ -28,24 +28,9 @@ public class MemberList extends AppCompatActivity {
         setContentView(R.layout.member_list);
         final Context ctx = MemberList.this;
 
-        ListView mbrList = findViewById(R.id.mbrList);
+        final ListView mbrList = findViewById(R.id.mbrList);
 
-        //Log.d("친구목록 ") - 이름들만 나오도록 작성
         final ItemList query = new ItemList(ctx);
-
-        /*ArrayList<Member> s = (ArrayList<Member>)new Main.ListService(){
-            @Override
-            public List<?> perform() {
-                return query.execute();
-            }
-        }.perform();*/
-
-        //Log.d("친구목록",s.toString());
-        //List에 대해 toString 하면 각각의 요소객체에 대해 toString()한 것과 동일한 듯
-
-
-        //mbrList.setAdapter(new MemberAdapter(ctx, s));  //mbrList에다가 어댑터를 먼저 붙인 다음에 이 어댑터이 ls 리스트를 줄 것
-
 
 
         mbrList.setAdapter(new MemberAdapter(ctx, (ArrayList<Member>)new Main.ListService(){
@@ -56,23 +41,42 @@ public class MemberList extends AppCompatActivity {
         }.perform()));
 
 
-
-
         findViewById(R.id.btnAdd).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(ctx, MemberDetail.class));
             }
         });
+
+        //Detail 처리. 아이템을 살짝눌렀거나 길게 눌렀을시의 처리
+        //각각의 어댑터들을 눌렀을 때에는 어댑터의 고유값이 ListView에 가서 반응처리가 된다. 즉 ListView를 누르는 것이다.
+        //ListView에서 각각의 Item값들을 가지고 이벤트처리를 한다.
+        mbrList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> p, View v, int i, long l) {
+                Member m = (Member)mbrList.getItemAtPosition(i);  //해당 위치에 있는 값을 가져와서 m에 할당
+                Log.d("선택한 id값", m.getSeq()+"");
+                Intent intent = new Intent(ctx, MemberDetail.class);
+                intent.putExtra("seq",m.seq+"");   //key와 value형태
+                startActivity(intent);
+            }
+        });
+        //삭제처리
+        mbrList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                return false;
+            }
+        });
+
     } //onCreateEnd
 
-
+    //모든 멤버정보 가져오기
     private class ListQuery extends Main.QueryFactory{
         SQLiteOpenHelper helper;
         public ListQuery(Context ctx){
             super(ctx);
-            helper = new Main.SqliteHelper(ctx);  //데이터베이스 접근 문지기
-            //ctx를 던지는 이유는, 해당 데이터베이스 문지기에 대해 여기로 오라고 하려고 하기 위함
+            helper = new Main.SqliteHelper(ctx);
         }
         @Override
         public SQLiteDatabase getDatabase() {
@@ -80,8 +84,7 @@ public class MemberList extends AppCompatActivity {
         }
     }
 
-    //지금 보면 각 java파일마다 객체생성하면서 데이터베이스에 접근을 매번 하는데,
-    //데이터베이스에 접근하는 것도 원래는 싱글톤패턴이라고 해서 객체 하나만 가지고 작동하도록 한다. - getInstance 등
+
 
     private class ItemList extends ListQuery{
         public ItemList(Context ctx){
@@ -89,19 +92,16 @@ public class MemberList extends AppCompatActivity {
         }
         public ArrayList<Member> execute(){
             ArrayList<Member> ls = new ArrayList<>();
-            Cursor c = this.getDatabase().rawQuery(    //Cursor 는 ResultSet처럼 생각해도 된다.
-                " SELECT * FROM MEMBER ", null   //null 은 내가 만든 쿼리를 실행하겠다.
+            Cursor c = this.getDatabase().rawQuery(
+                " SELECT * FROM MEMBER ", null
             );
 
             Member m = null;
-            if(c!=null){   //데이터가 아무것도 존재하지 않을수도 있으므로 검증하기
+            if(c!=null){
                 while(c.moveToNext()){
                     m = new Member();
-                    //m을 밖에서 null로 둔 이유. 데이터가 하나도 없는 경우 m도 null로 두도록 만들기 위해서이다.
 
                     m.setSeq(Integer.parseInt(c.getString(c.getColumnIndex(DBInfo.MBR_SEQ))));
-                    //getColumnIndex는 칼럼명을 가지고 해당 칼럼의 숫자값을 가져온다. 그 값을 가지고 getString을 해서 seq값을 가져온다.
-                    //DB는 전부 String으로 되어있다. String으로 통신함
 
                     m.setName(c.getString(c.getColumnIndex(DBInfo.MBR_NAME)));
 
@@ -121,21 +121,19 @@ public class MemberList extends AppCompatActivity {
             return ls;
         }
     }
-    //두 클래스를 합쳐도 되기는 하는데 클래스 하나당 메소드 하나씩만 배치해주자. -> 람다식용?
+    //모든 멤버정보 가져오기 끝
 
 
     //mbr_item.xml 아이템 관련 파트
-    private class MemberAdapter extends BaseAdapter{  //android studio의 클래스 상속
-        //에릭 감마가 디자인패턴을 만들었다. 이 중 어댑터 패턴을 쓸 것이다.
-        //출력할 ListView 사이에 어댑터를 하나 두고, 이 어댑터에 데이터를 넘겨주면 어댑터가 데이터를 써다준다.
+    private class MemberAdapter extends BaseAdapter{
         Context ctx;
         ArrayList<Member> ls;
-        LayoutInflater inflater;  //자동차 공기압축기. 글자새긴 풍선을 리스트에 붙인다고 생각하자. 그 다음에 풍선 부풀리기?
-        //데이터 이동할 때 용량 줄이기 위해서?
+        LayoutInflater inflater;
+
         public MemberAdapter(Context ctx, ArrayList<Member> ls) {
-            this.ctx = ctx;   //어댑터 또한 이곳으로 끌고오기
+            this.ctx = ctx;
             this.ls = ls;
-            this.inflater = LayoutInflater.from(ctx);  //이 자리에 와서 바람을 넣기
+            this.inflater = LayoutInflater.from(ctx);
         }
 
         @Override
@@ -152,41 +150,55 @@ public class MemberList extends AppCompatActivity {
         public long getItemId(int i) {
             return i;
         }
-        //i는 인덱스를 의미
+
 
         @Override
         public View getView(int i, View v, ViewGroup g) {
-            //v를 풍선처럼 부풀린다음에 데이터를 붙여서 반환시키기
             ViewHolder holder;
             if(v==null){
-                v = inflater.inflate(R.layout.mbr_item, null);  //해당 xml을 가져와서 v에 담기
+                v = inflater.inflate(R.layout.mbr_item, null);
                 holder = new ViewHolder();
-                //holder.photo = v.findViewById(R.id.photo);
-                holder.name = v.findViewById(R.id.name);   //위젯의 id를 위젯객체와 연결
+                holder.photo = v.findViewById(R.id.photo);
+                holder.name = v.findViewById(R.id.name);
                 holder.phone = v.findViewById(R.id.phone);
                 v.setTag(holder);
             }else{
                 holder = (ViewHolder) v.getTag();
             }
-            /*setTag는 바코드를 다는 것이라고 보면 된다. 태그달기
-            setTag는 인자로서 Object형을 받으며 getTag는 Object형을 반환한다.
-            원하는 view에 태그를 달아서
-            */
             holder.name.setText(ls.get(i).getName());
             holder.phone.setText(ls.get(i).getPhone());
-            //포토 불러오는 코드
 
+            //포토불러오는 코드
+            final ItemPhoto query = new ItemPhoto(ctx);
+            query.seq = ls.get(i).getSeq()+"";
+            String s = ((String)new Main.ObjectService() {
+                @Override
+                public Object perform() {
+                    return query.execute();
+                }
+            }.perform()).toLowerCase();   //ArrayList<Member> ls 에 이미 포토이름값이 있는데 또 가져올 이유가 있을까
+            //String ImageName = ls.get(i).getPhoto().toLowerCase();  그냥 이렇게 가져와도 될텐데.
+            Log.d("파일명",s);
+            holder.photo.setImageDrawable(getResources().getDrawable(
+                    getResources().getIdentifier(ctx.getPackageName()+":drawable/" + s,null,null),ctx.getTheme()
+            ));   //res에 있는 drawable에 있는 파일로 세팅하기
+
+            //나중 자바에는 나머지 인자 안넣어도 되게 바뀜. jdk 9 이상부터
+            //파일가져올 때 확장자는 안써도 됨
 
             return v;
         }
-        //getView부분이 반복되면서 하나하나의 Item을 만들어준다고 생각하면 된다.
+
     }
     static class ViewHolder{
         ImageView photo;
         TextView name, phone;
-    }  //값 부착할 클래스
+    }
+    //아이템 생성관련 끝
 
-    private class PhotoQuery extends Main.QueryFactory{   //사진을 불러오기 위한 클래스
+
+    //사진을 불러오기 위한 클래스 시작
+    private class PhotoQuery extends Main.QueryFactory{
         SQLiteOpenHelper helper;
         public PhotoQuery(Context ctx) {
             super(ctx);
@@ -199,24 +211,27 @@ public class MemberList extends AppCompatActivity {
         }
     }
 
-    private class PhotoItem extends PhotoQuery{
-        int seq;
-        public PhotoItem(Context ctx) {
+    private class ItemPhoto extends PhotoQuery{
+        String seq;
+        public ItemPhoto(Context ctx) {
             super(ctx);
         }
         public String execute(){
-            super.getDatabase().rawQuery(
+            Cursor c = getDatabase().rawQuery(
                     String.format(
-                            "SELECT %s WHERE %s LIKE %s",
-                            DBInfo.MBR_PHOTO, DBInfo.MBR_SEQ, seq
-                    ),null
+                            " SELECT %s FROM %s WHERE %s LIKE '%s' ",  //따옴표에 주의하도록 한다.
+                            DBInfo.MBR_PHOTO,DBInfo.MBR_TABLE,DBInfo.MBR_SEQ, seq),null
             );
-
-            return null;
+            String result = "";
+            if(c!=null){
+                if(c.moveToNext()){
+                    result = c.getString(c.getColumnIndex(DBInfo.MBR_PHOTO));
+                }
+            }
+            return result;
         }
     }
-
-
-
+    //실제로는 이미지를 URL로 가져온다? - 서버에 있는 것을 가져온다는 건가
+    //사진 불러오기부분 끝
 
 }
