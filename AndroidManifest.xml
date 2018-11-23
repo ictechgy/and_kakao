@@ -11,18 +11,17 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".Login" />
-        <activity android:name=".Main">
-        </activity>
-        <activity android:name=".MemberList" >
+        <activity android:name=".Main"></activity>
+        <activity android:name=".MemberList">
             <intent-filter>
-              <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN" />
 
-             <category android:name="android.intent.category.LAUNCHER" />
-          </intent-filter>
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
-
         <activity android:name=".MemberDetail" />
-        <activity android:name=".MemberUpdate"></activity>
+        <activity android:name=".MemberUpdate" />
+        <activity android:name=".MemberAdd"></activity>
     </application>
 
 </manifest>

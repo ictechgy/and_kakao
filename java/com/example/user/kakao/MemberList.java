@@ -1,10 +1,12 @@
 package com.example.user.kakao;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,6 +18,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,28 +47,61 @@ public class MemberList extends AppCompatActivity {
         findViewById(R.id.btnAdd).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(ctx, MemberDetail.class));
+                startActivity(new Intent(ctx, MemberAdd.class));
             }
         });
 
-        //Detail 처리. 아이템을 살짝눌렀거나 길게 눌렀을시의 처리
-        //각각의 어댑터들을 눌렀을 때에는 어댑터의 고유값이 ListView에 가서 반응처리가 된다. 즉 ListView를 누르는 것이다.
-        //ListView에서 각각의 Item값들을 가지고 이벤트처리를 한다.
+
         mbrList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> p, View v, int i, long l) {
-                Member m = (Member)mbrList.getItemAtPosition(i);  //해당 위치에 있는 값을 가져와서 m에 할당
+                Member m = (Member)mbrList.getItemAtPosition(i);
                 Log.d("선택한 id값", m.getSeq()+"");
                 Intent intent = new Intent(ctx, MemberDetail.class);
-                intent.putExtra("seq",m.seq+"");   //key와 value형태
+                intent.putExtra("seq",m.seq+"");
                 startActivity(intent);
             }
         });
+
         //삭제처리
         mbrList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                return false;
+            public boolean onItemLongClick(AdapterView<?> p, View v, int i, long l) {
+                final Member m = (Member)mbrList.getItemAtPosition(i);
+
+                new AlertDialog.Builder(ctx)
+                        .setTitle("삭 제")
+                        .setMessage("정말 삭제?")
+                        .setPositiveButton(
+                                android.R.string.yes,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        //삭제 쿼리 실행
+                                        final ItemDelete query = new ItemDelete(ctx);
+                                        query.seq = m.seq+"";
+                                        new Main.ExecuteService(){
+                                            @Override
+                                            public void perform() {
+                                                query.execute();
+                                            }
+                                        }.perform();
+
+                                        Toast.makeText(ctx, "삭제 완료", Toast.LENGTH_LONG).show();
+                                        startActivity(new Intent(ctx, MemberList.class));
+                                    }
+                                }
+                        ).setNegativeButton(
+                        android.R.string.no,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Toast.makeText(ctx, "삭제 취소", Toast.LENGTH_LONG).show();
+                            }
+                        }
+                ).show();  //alert도 show()주자.
+
+                return true;  //true로 해야 반영이 된다.
             }
         });
 
@@ -179,12 +215,17 @@ public class MemberList extends AppCompatActivity {
             }.perform()).toLowerCase();   //ArrayList<Member> ls 에 이미 포토이름값이 있는데 또 가져올 이유가 있을까
             //String ImageName = ls.get(i).getPhoto().toLowerCase();  그냥 이렇게 가져와도 될텐데.
             Log.d("파일명",s);
-            holder.photo.setImageDrawable(getResources().getDrawable(
-                    getResources().getIdentifier(ctx.getPackageName()+":drawable/" + s,null,null),ctx.getTheme()
-            ));   //res에 있는 drawable에 있는 파일로 세팅하기
 
-            //나중 자바에는 나머지 인자 안넣어도 되게 바뀜. jdk 9 이상부터
-            //파일가져올 때 확장자는 안써도 됨
+            try {
+                holder.photo.setImageDrawable(getResources().getDrawable(
+                        getResources().getIdentifier(ctx.getPackageName() + ":drawable/" + s, null, null), ctx.getTheme()
+                ));   //res에 있는 drawable에 있는 파일로 세팅하기
+            }catch(Exception e){
+                e.printStackTrace();
+                holder.photo.setImageDrawable(getResources().getDrawable(
+                        getResources().getIdentifier(ctx.getPackageName()+":drawable/blank", null, null), ctx.getTheme()
+                ));   //사진이름을 못가져오는 경우 빈 화면 띄우기
+            }
 
             return v;
         }
@@ -233,5 +274,40 @@ public class MemberList extends AppCompatActivity {
     }
     //실제로는 이미지를 URL로 가져온다? - 서버에 있는 것을 가져온다는 건가
     //사진 불러오기부분 끝
+
+
+    private class DeleteQuery extends Main.QueryFactory{
+        SQLiteOpenHelper helper;
+        public DeleteQuery(Context ctx) {
+            super(ctx);
+            helper = new Main.SqliteHelper(ctx);
+        }
+
+        @Override
+        public SQLiteDatabase getDatabase() {
+            return helper.getWritableDatabase();
+        }
+    }
+
+    private class ItemDelete extends DeleteQuery{
+        String seq;
+        public ItemDelete(Context ctx) {
+            super(ctx);
+        }
+
+        public void execute(){
+            getDatabase().execSQL(
+                    String.format(
+                            " DELETE FROM %s WHERE %s LIKE '%s' ", DBInfo.MBR_TABLE, DBInfo.MBR_SEQ, seq
+                    )   //null값은 rawQuery에만 추가적으로 넣어주는거구나
+            );
+        }
+
+
+    }
+
+
+
+
 
 }
