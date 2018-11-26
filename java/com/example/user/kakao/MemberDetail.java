@@ -12,6 +12,10 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.user.kakao.util.Album;
+import com.example.user.kakao.util.Email;
+import com.example.user.kakao.util.Phone;
+
 public class MemberDetail extends AppCompatActivity {
 
     @Override
@@ -20,12 +24,12 @@ public class MemberDetail extends AppCompatActivity {
         setContentView(R.layout.member_detail);
         final Context ctx = MemberDetail.this;
 
-        Intent intent = this.getIntent(); //이전페이지에서 넘어온 Intent를 받음. this 생략가능
+        Intent intent = this.getIntent();
         String seq = intent.getExtras().getString("seq");
         final ItemDetail query = new ItemDetail(ctx);
         query.seq = seq;
 
-        Member m = (Member)new Main.ObjectService(){
+        final Member m = (Member)new Main.ObjectService(){
             @Override
             public Object perform() {
                 return query.execute();
@@ -40,17 +44,12 @@ public class MemberDetail extends AppCompatActivity {
         TextView phone = findViewById(R.id.phone);
         TextView addr = findViewById(R.id.addr);
         ImageView profile = findViewById(R.id.profile);
-        //findViewById() 에다가 바로 setText()이런게 안되는구나. 속성값으로서 반드시 변수에 받아둔 후 변경이 가능하다.
-        //이 말인 즉슨, getView에서도 전개한 뷰v에 값을 넣을 때 클래스객체를 통해 한게 이해가 된다.
-        //클래스객체의 각각의 멤버에 값을 담고 그 멤버에다가 setText()같은걸 붙였었다.
-        //그리고 이미 view를 만들었었던 상태였었다면 전개를 하지 않아도 되고 이전에 설정했던 태그값을 가져옴으로서
-        //바로 설정을 할 수 있도록 Tag메소드들도 사용했음
+
         name.setText(m.getName());
         email.setText(m.getEmail());
         phone.setText(m.getPhone());
         addr.setText(m.getAddr());
 
-        // String photo_name = m.getPhoto().toLowerCase();  이걸로 해도 되지만 추가적으로 데이터 가져오도록 만들자.
         final ImageDetail im = new ImageDetail(ctx);
         im.seq = m.getSeq()+"";
         String image_name = ((String)new Main.ObjectService(){
@@ -72,7 +71,6 @@ public class MemberDetail extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(ctx, MemberUpdate.class);
                 intent.putExtra("spec",spec);
-                //이번에는 해당 사람의 모든 정보를 같이 싣자. Member객체를 통째로 보내는건 안됨
                 startActivity(intent);
             }
         });
@@ -83,6 +81,84 @@ public class MemberDetail extends AppCompatActivity {
                 startActivity(new Intent(ctx, MemberList.class));
             }
         });
+
+
+
+        //나머지 버튼들 구현
+        findViewById(R.id.callBtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /*
+                전화거는 버튼같은 경우 권한을 허가받아야 한다.
+                여러가지 버튼작동 등에 있어서 permission이 필요하다.
+                이러한 것들은 manifest에서 하는 것인데, 직접 쓰지 말고 구글문서를 살펴보자.
+                구글이 제공하는 안드로이드 개발참고서 - https://developer.android.com/
+                전화관련 안드로이드 참고서 문헌 - https://developer.android.com/reference/android/Manifest.permission.html#CALL_PHONE
+                전화관련 permission이름 - android.permission.CALL_PHONE
+
+                퍼미션과 관련해서 manifest에 작성해주었다면 이번에는 전화관련 Phone클래스를 만들었다.
+                */
+                Phone phone = new Phone(ctx, MemberDetail.this);
+                phone.setPhoneNum(m.getPhone());
+                phone.directCall();
+            }
+        });
+
+        findViewById(R.id.dialBtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Phone phone = new Phone(ctx, MemberDetail.this);
+                phone.setPhoneNum(m.getPhone());
+                phone.dial();
+            }
+        });
+        //현재 이 프로젝트가 OS 8.0 환경에서 만들어졌으므로 그 이하 OS에서는 설치 불가능하다.
+
+        findViewById(R.id.smsBtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        findViewById(R.id.emailBtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Email email = new Email(ctx, MemberDetail.this);
+                email.sendEmail("wlsghd1216@naver.com");
+            }
+        });
+        //sms와 email은 내가 가지고 있는 것을 상대도 가지고 있어야 한다. 이 부분은 하이브리드로 구현할 것이다.
+
+        findViewById(R.id.albumBtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(ctx, Album.class));
+            }
+        });
+
+        findViewById(R.id.movieBtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        findViewById(R.id.mapBtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //구글맵은 무거워서 잘 뻗는다. 따라서 다르게 구현하자
+            }
+        });
+
+        findViewById(R.id.musicBtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+
     }   //onCreate 끝
 
 

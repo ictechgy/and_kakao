@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.user.kakao">
 
-    <!-- intent-filter 가 있는 것을 먼저 띄운다. intent - 의도하다. -->
+    <!-- 권한 획득하기. 안드로이드 문서에서 android.permission.CALL_PHONE 을 찾아내었다. -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -11,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".Login" />
-        <activity android:name=".Main"></activity>
+        <activity android:name=".Main" />
         <activity android:name=".MemberList">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,7 +23,8 @@
         </activity>
         <activity android:name=".MemberDetail" />
         <activity android:name=".MemberUpdate" />
-        <activity android:name=".MemberAdd"></activity>
+        <activity android:name=".MemberAdd" />
+        <activity android:name=".util.Album"></activity>
     </application>
 
 </manifest>
