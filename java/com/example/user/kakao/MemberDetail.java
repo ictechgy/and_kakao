@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.example.user.kakao.util.Album;
 import com.example.user.kakao.util.Email;
+import com.example.user.kakao.util.Movie;
 import com.example.user.kakao.util.Phone;
 
 public class MemberDetail extends AppCompatActivity {
@@ -88,16 +89,6 @@ public class MemberDetail extends AppCompatActivity {
         findViewById(R.id.callBtn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*
-                전화거는 버튼같은 경우 권한을 허가받아야 한다.
-                여러가지 버튼작동 등에 있어서 permission이 필요하다.
-                이러한 것들은 manifest에서 하는 것인데, 직접 쓰지 말고 구글문서를 살펴보자.
-                구글이 제공하는 안드로이드 개발참고서 - https://developer.android.com/
-                전화관련 안드로이드 참고서 문헌 - https://developer.android.com/reference/android/Manifest.permission.html#CALL_PHONE
-                전화관련 permission이름 - android.permission.CALL_PHONE
-
-                퍼미션과 관련해서 manifest에 작성해주었다면 이번에는 전화관련 Phone클래스를 만들었다.
-                */
                 Phone phone = new Phone(ctx, MemberDetail.this);
                 phone.setPhoneNum(m.getPhone());
                 phone.directCall();
@@ -112,7 +103,6 @@ public class MemberDetail extends AppCompatActivity {
                 phone.dial();
             }
         });
-        //현재 이 프로젝트가 OS 8.0 환경에서 만들어졌으므로 그 이하 OS에서는 설치 불가능하다.
 
         findViewById(R.id.smsBtn).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -128,7 +118,6 @@ public class MemberDetail extends AppCompatActivity {
                 email.sendEmail("wlsghd1216@naver.com");
             }
         });
-        //sms와 email은 내가 가지고 있는 것을 상대도 가지고 있어야 한다. 이 부분은 하이브리드로 구현할 것이다.
 
         findViewById(R.id.albumBtn).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,14 +129,13 @@ public class MemberDetail extends AppCompatActivity {
         findViewById(R.id.movieBtn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                startActivity(new Intent(ctx, Movie.class));
             }
         });
 
         findViewById(R.id.mapBtn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //구글맵은 무거워서 잘 뻗는다. 따라서 다르게 구현하자
             }
         });
 
